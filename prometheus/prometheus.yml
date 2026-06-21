@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'health-metrics-monitor'
+
+scrape_configs:
+  # scrape prometheus itself to monitor its own health and performance
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # scrape the python app for its health and performance metrics
+  - job_name: 'python-app'
+    static_configs:
+      - targets: ['python-app:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  # scrape cadvisor for container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # scrape node exporter for host metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']

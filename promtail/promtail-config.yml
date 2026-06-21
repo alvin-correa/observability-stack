@@ -1,0 +1,54 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # ============================================
+  # Read ALL Docker container JSON logs directly
+  # ============================================
+  - job_name: docker-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker-logs
+          __path__: /var/lib/docker/containers/*/*-json.log
+
+    pipeline_stages:
+      # Docker wraps logs in JSON: {"log":"...","stream":"...","time":"..."}
+      - json:
+          expressions:
+            log_line: log
+            stream: stream
+            timestamp: time
+
+      # The actual log content is inside the "log" field
+      - json:
+          source: log_line
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+            service: service
+            heart_rate: heart_rate
+            bp_sys: bp_sys
+            bp_dia: bp_dia
+            temp: temp
+
+      - labels:
+          stream:
+          level:
+          service:
+
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+
+      - output:
+          source: log_line

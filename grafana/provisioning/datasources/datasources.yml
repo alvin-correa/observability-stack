@@ -1,0 +1,29 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: "POST"
+      manageAlerts: true
+      prometheusType: "prometheus"
+      prometheusVersion: "2.40.0"
+      cacheLevel: 'High'
+      disableRecordRules: false
+      incrementalQueryOverlapWindow: 10m
+
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - name: 'TraceID'
+          matcherRegex: '"trace_id": "(\w+)"'
+          url: 'http://localhost:3000/explore?orgId=1&left=["now-1h","now","Loki",{"expr":"{trace_id=\"${__value.raw}\"}"}]'
